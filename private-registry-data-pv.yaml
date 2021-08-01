@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: k8s-docker-registry-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 50Gi
+  local:
+    path: XXXXXXXX
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: XXXXXX
+          operator: In
+          values:
+          - XXXXXXX
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem

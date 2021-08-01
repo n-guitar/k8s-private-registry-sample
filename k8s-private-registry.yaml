@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-private-registry
+  namespace: docker-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-private-registry
+  template:
+    metadata:
+      labels:
+        app: k8s-private-registry
+    spec:
+      containers:
+      - env:
+        - name: REGISTRY_AUTH
+          value: htpasswd
+        - name: REGISTRY_AUTH_HTPASSWD_PATH
+          value: /opt/auth/htpasswd
+        - name: REGISTRY_AUTH_HTPASSWD_REALM
+          value: Registry Realm
+        - name: REGISTRY_HTTP_ADDR
+          value: 0.0.0.0:443
+        - name: REGISTRY_HTTP_TLS_CERTIFICATE
+          value: /opt/crt/server.crt
+        - name: REGISTRY_HTTP_TLS_KEY
+          value: /opt/crt/server.key
+        image: registry:2.7
+        name: k8s-private-registry
+        resources: {}
+        volumeMounts:
+        - mountPath: /opt/auth/
+          name: auth
+        - mountPath: /opt/crt/
+          name: crt
+        - mountPath: /var/lib/registry
+          name: data
+      volumes:
+      - name: auth
+        secret:
+          defaultMode: 420
+          items:
+          - key: htpasswd
+            path: htpasswd
+          optional: false
+          secretName: private-registry-htpasswd
+      - name: crt
+        secret:
+          defaultMode: 420
+          optional: false
+          secretName: docker-registry-tls-cert
+      - name: data
+        persistentVolumeClaim:
+          claimName: k8s-docker-registry-data
